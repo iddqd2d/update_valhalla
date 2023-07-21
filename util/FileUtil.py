@@ -28,8 +28,8 @@ class FileUtil:
     def writeLog(self, data, consoleLogNeed=True):
         with open(AppConstant.LOG_FILE_PATH, 'a') as file:
             dtString = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            file.write(f"{dtString} : {data} \n")
-            if consoleLogNeed: print(f"{dtString} : {data}")
+            file.write(f"{dtString} - {data}")
+            if consoleLogNeed: print(f"{dtString} - {data}")
 
     def getFileNameFromAbsoluteFilePath(self, absoluteFilePath):
         return absoluteFilePath.split("/")[-1]

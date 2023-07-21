@@ -12,10 +12,10 @@ class Run:
         self.fileUtil = FileUtil.instance()
 
     def executeCommand(self, title, command):
+        self.fileUtil.writeLog(f"Title: {title}")
+        self.fileUtil.writeLog(f"Command: {command}")
         output = subprocess.getoutput(command)
-        log = f"{title} \nCommand: {command}\nOutput: "
-        log += output if output else "Done!"
-        self.fileUtil.writeLog(log)
+        self.fileUtil.writeLog("Output: " + (output if output else "Done!"))
 
     def updateTiles(self):
         try:
@@ -49,9 +49,13 @@ class Run:
                 self.fileUtil.writeLog("Build tiles tar file failed")
                 return
 
-            valhallaPid = subprocess.getoutput("pgrep valhalla")
-            if (valhallaPid):
-                self.executeCommand(title="Stop Valhalla Server",
+            self.executeCommand(title="Get All Valhalla processes", command="ps -ax | grep valhalla")
+            valhallaPidStr = subprocess.getoutput("pgrep -f 'valhalla'")
+            if valhallaPidStr:
+                valhallaPidArr = valhallaPidStr.split("\n")
+                for valhallaPid in valhallaPidArr:
+                    if "T" in subprocess.getoutput(f"ps -p {valhallaPid} -o stat="):
+                        self.executeCommand(title="Stop Valhalla PID :",
                                     command=f"kill -9 {valhallaPid}")
 
             if os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
