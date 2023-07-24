@@ -17,6 +17,16 @@ class Run:
         output = subprocess.getoutput(command)
         self.fileUtil.writeLog("Output: " + (output if output else "Done!"))
 
+
+    def killProcessByStr(self, pid, containsStr):
+        if containsStr not in subprocess.getoutput(f"ps -p {pid} -o args="):
+            return
+        ppid = subprocess.getoutput(f"ps -p {pid} -o ppid=")
+        self.executeCommand(title="Stop Valhalla PID: ",
+                             command=f"kill -9 {pid}")
+        return self.killProcessByStr(ppid, containsStr)
+
+
     def updateTiles(self):
         try:
             if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{AppConstant.TILES_DIR}"):
@@ -50,13 +60,11 @@ class Run:
                 return
 
             self.executeCommand(title="Get All Valhalla processes", command="ps -ax | grep valhalla")
-            valhallaPidStr = subprocess.getoutput("pgrep -f 'valhalla'")
+            valhallaPidStr = subprocess.getoutput("pgrep 'valhalla'")
             if valhallaPidStr:
                 valhallaPidArr = valhallaPidStr.split("\n")
                 for valhallaPid in valhallaPidArr:
-                    if "T" in subprocess.getoutput(f"ps -p {valhallaPid} -o stat="):
-                        self.executeCommand(title="Stop Valhalla PID :",
-                                    command=f"kill -9 {valhallaPid}")
+                    self.killProcessByStr(valhallaPid, "valhalla")
 
             if os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
                 self.executeCommand(title=f"Remove old tiles tar {AppConstant.TILES_TAR_FILE}",
