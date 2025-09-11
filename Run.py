@@ -35,21 +35,24 @@ class Run:
                     self.fileUtil.writeLog("Your tiles are up to date")
                     return
 
-            self.executeCommand(title=f"Start download PBF file from url: {AppConstant.PBF_FILE_URL}",
-                                command=f"curl -o {AppConstant.PBF_FILE_ABSOLUTE_PATH} {AppConstant.PBF_FILE_URL}")
+            self.executeCommand(title=f"Start download region PBF file from url: {AppConstant.REGION_PBF_FILE_URL}",
+                                command=f"curl -L -o {AppConstant.REGION_PBF_FILE_ABSOLUTE_PATH} {AppConstant.REGION_PBF_FILE_URL}")
+
+            self.executeCommand(title=f"Start download admins PBF file from url: {AppConstant.ADMINS_PBF_FILE_URL}",
+                                command=f"curl -L -o {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH} {AppConstant.ADMINS_PBF_FILE_URL}")
 
             if os.path.exists(f"{AppConstant.TILES_DIR}"):
                 self.executeCommand(title=f"Remove old tiles from dir: {AppConstant.TILES_DIR}",
                                     command=f"rm -r {AppConstant.TILES_DIR}/*")
 
             self.executeCommand(title=f"Build admins in: {AppConstant.TILES_DIR}",
-                                command=f"valhalla_build_admins --config {AppConstant.CONFIG_FILE} {AppConstant.PBF_FILE_ABSOLUTE_PATH}")
+                                command=f"valhalla_build_admins --config {AppConstant.CONFIG_FILE} {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
 
             self.executeCommand(title=f"Build timezones in: {AppConstant.TILES_DIR}",
                                 command=f"valhalla_build_timezones > {AppConstant.TILES_DIR}/timezones.sqlite")
 
             self.executeCommand(title=f"Build tiles in: {AppConstant.TILES_DIR}",
-                                command=f"valhalla_build_tiles -c {AppConstant.CONFIG_FILE} {AppConstant.PBF_FILE_ABSOLUTE_PATH}")
+                                command=f"valhalla_build_tiles -c {AppConstant.CONFIG_FILE} {AppConstant.REGION_PBF_FILE_ABSOLUTE_PATH}")
 
             self.executeCommand(title=f"Build tiles tar file in: {AppConstant.TILES_DIR}",
                                 command=f"find {AppConstant.TILES_DIR} | sort -n | tar -cf '{AppConstant.TEMP_TILES_TAR_FILE}' --no-recursion -T -")
