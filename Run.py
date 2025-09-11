@@ -29,8 +29,19 @@ class Run:
 
     def updateTiles(self):
         try:
-            if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{AppConstant.TILES_DIR}"):
-                tilesTime = self.fileUtil.getModificationDate(f"{AppConstant.TILES_DIR}")
+            if not os.path.exists(f"{AppConstant.VALHALLA_DIR}"):
+                self.executeCommand(title=f"Create new project dir: {AppConstant.VALHALLA_DIR}",
+                                    command=f"mkdir  {AppConstant.VALHALLA_DIR}")
+
+                self.executeCommand(title=f"Create new project dir: {AppConstant.VALHALLA_DIR}",
+                                    command=f"valhalla_build_config --mjolnir-tile-dir {AppConstant.TILES_DIR}"
+                                            f" --mjolnir-tile-extract {AppConstant.TILES_TAR_FILE} "
+                                            f"--mjolnir-timezone {AppConstant.TILES_DIR}/timezones.sqlite "
+                                            f"--mjolnir-admin {AppConstant.TILES_DIR}/admins.sqlite > valhalla.json")
+
+
+            if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
+                tilesTime = self.fileUtil.getModificationDate(f"{AppConstant.TILES_TAR_FILE}")
                 if time.time() - tilesTime < AppConstant.EXPIRED_TIME:
                     self.fileUtil.writeLog("Your tiles are up to date")
                     return
@@ -42,8 +53,11 @@ class Run:
                                 command=f"curl -L -o {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH} {AppConstant.ADMINS_PBF_FILE_URL}")
 
             if os.path.exists(f"{AppConstant.TILES_DIR}"):
-                self.executeCommand(title=f"Remove old tiles from dir: {AppConstant.TILES_DIR}",
+                self.executeCommand(title=f"Remove old tiles data from dir: {AppConstant.TILES_DIR}",
                                     command=f"rm -r {AppConstant.TILES_DIR}/*")
+            else:
+                self.executeCommand(title=f"Create new tiles dir: {AppConstant.TILES_DIR}",
+                                    command=f"mkdir  {AppConstant.TILES_DIR}")
 
             self.executeCommand(title=f"Build admins in: {AppConstant.TILES_DIR}",
                                 command=f"valhalla_build_admins --config {AppConstant.CONFIG_FILE} {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
