@@ -10,17 +10,18 @@ class Run:
 
     def __init__(self):
         self.fileUtil = FileUtil.instance()
-        base_dir = getattr(AppConstant, "VALHALLA_DIR", "") or ""
-        if not base_dir.strip():
+
+        if not AppConstant.VALHALLA_DIR:
             base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.VALHALLA_DIR = os.path.abspath(os.path.expanduser(base_dir))
+            self.VALHALLA_DIR = os.path.abspath(os.path.expanduser(base_dir))
+            os.makedirs(self.VALHALLA_DIR, exist_ok=True)
+
         self.TILES_DIR = os.path.join(self.VALHALLA_DIR, "valhalla_tiles")
         self.TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "valhalla_tiles.tar")
         self.TEMP_TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "temp_valhalla_tiles.tar")
         self.CONFIG_FILE = os.path.join(self.VALHALLA_DIR, "valhalla.json")
         self.REGION_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "tiles.pbf")
         self.ADMINS_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "admins.pbf")
-        os.makedirs(self.VALHALLA_DIR, exist_ok=True)
 
     def executeCommand(self, title, command):
         self.fileUtil.writeLog(f"Title: {title}")
