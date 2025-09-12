@@ -55,11 +55,11 @@ class Run:
                     self.fileUtil.writeLog("Your tiles are up to date")
                     return
 
-            self.executeCommand(title=f"Start download region PBF file from url: {self.REGION_PBF_FILE_ABSOLUTE_PATH}",
-                                command=f"curl -L -o {self.REGION_PBF_FILE_ABSOLUTE_PATH} {self.REGION_PBF_FILE_ABSOLUTE_PATH}")
+            self.executeCommand(title=f"Start download region PBF file from url: {AppConstant.REGION_PBF_FILE_URL}",
+                                command=f"curl -L -o {self.REGION_PBF_FILE_ABSOLUTE_PATH} {AppConstant.REGION_PBF_FILE_URL}")
 
-            self.executeCommand(title=f"Start download admins PBF file from url: {self.ADMINS_PBF_FILE_ABSOLUTE_PATH}",
-                                command=f"curl -L -o {self.ADMINS_PBF_FILE_ABSOLUTE_PATH} {self.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
+            self.executeCommand(title=f"Start download admins PBF file from url: {AppConstant.ADMINS_PBF_FILE_URL}",
+                                command=f"curl -L -o {self.ADMINS_PBF_FILE_ABSOLUTE_PATH} {AppConstant.ADMINS_PBF_FILE_URL}")
 
             if os.path.exists(f"{self.TILES_DIR}"):
                 self.executeCommand(title=f"Remove old tiles data from dir: {self.TILES_DIR}",
