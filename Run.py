@@ -36,8 +36,8 @@ class Run:
                 self.executeCommand(title=f"Create new project dir: {AppConstant.VALHALLA_DIR}",
                                     command=f"valhalla_build_config --mjolnir-tile-dir {AppConstant.TILES_DIR}"
                                             f" --mjolnir-tile-extract {AppConstant.TILES_TAR_FILE} "
-                                            f"--mjolnir-timezone {AppConstant.TILES_DIR}/timezones.sqlite "
-                                            f"--mjolnir-admin {AppConstant.TILES_DIR}/admins.sqlite > valhalla.json")
+                                            f" --mjolnir-timezone {AppConstant.TILES_DIR}/timezones.sqlite "
+                                            f" --mjolnir-admin {AppConstant.TILES_DIR}/admins.sqlite > valhalla.json")
 
 
             if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
