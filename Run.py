@@ -81,7 +81,7 @@ class Run:
                                 command=f"find {self.TILES_DIR} | sort -n | tar -cf '{self.TEMP_TILES_TAR_FILE}' --no-recursion -T -")
 
             sizeInBytes = os.path.getsize(f"{self.TEMP_TILES_TAR_FILE}")
-            if sizeInBytes == 0:
+            if sizeInBytes < 10 * 1024 * 1024 * 1024:
                 self.fileUtil.writeLog("Build tiles tar file failed")
                 return
 
