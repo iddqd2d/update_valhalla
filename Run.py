@@ -10,6 +10,17 @@ class Run:
 
     def __init__(self):
         self.fileUtil = FileUtil.instance()
+        base_dir = getattr(AppConstant, "VALHALLA_DIR", "") or ""
+        if not base_dir.strip():
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.VALHALLA_DIR = os.path.abspath(os.path.expanduser(base_dir))
+        self.TILES_DIR = os.path.join(self.VALHALLA_DIR, "valhalla_tiles")
+        self.TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "valhalla_tiles.tar")
+        self.TEMP_TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "temp_valhalla_tiles.tar")
+        self.CONFIG_FILE = os.path.join(self.VALHALLA_DIR, "valhalla.json")
+        self.REGION_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "tiles.pbf")
+        self.ADMINS_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "admins.pbf")
+        os.makedirs(self.VALHALLA_DIR, exist_ok=True)
 
     def executeCommand(self, title, command):
         self.fileUtil.writeLog(f"Title: {title}")
@@ -29,49 +40,46 @@ class Run:
 
     def updateTiles(self):
         try:
-            if not os.path.exists(f"{AppConstant.VALHALLA_DIR}"):
-                self.executeCommand(title=f"Create new project dir: {AppConstant.VALHALLA_DIR}",
-                                    command=f"mkdir  {AppConstant.VALHALLA_DIR}")
-
-                self.executeCommand(title=f"Create config file: {AppConstant.VALHALLA_DIR}",
-                                    command=f"valhalla_build_config --mjolnir-tile-dir {AppConstant.TILES_DIR}"
-                                            f" --mjolnir-tile-extract {AppConstant.TILES_TAR_FILE} "
-                                            f" --mjolnir-timezone {AppConstant.TILES_DIR}/timezones.sqlite "
-                                            f" --mjolnir-admin {AppConstant.TILES_DIR}/admins.sqlite > valhalla.json")
+            if not os.path.exists(f"{self.CONFIG_FILE}"):
+                self.executeCommand(title=f"Create config file: {self.CONFIG_FILE}",
+                                    command=f"valhalla_build_config --mjolnir-tile-dir {self.TILES_DIR}"
+                                            f" --mjolnir-tile-extract {self.TILES_TAR_FILE} "
+                                            f" --mjolnir-timezone {self.TILES_DIR}/timezones.sqlite "
+                                            f" --mjolnir-admin {self.TILES_DIR}/admins.sqlite > {self.CONFIG_FILE}")
 
 
-            if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
-                tilesTime = self.fileUtil.getModificationDate(f"{AppConstant.TILES_TAR_FILE}")
+            if AppConstant.CHECK_EXPIRED_TIME and os.path.exists(f"{self.TILES_TAR_FILE}"):
+                tilesTime = self.fileUtil.getModificationDate(f"{self.TILES_TAR_FILE}")
                 if time.time() - tilesTime < AppConstant.EXPIRED_TIME:
                     self.fileUtil.writeLog("Your tiles are up to date")
                     return
 
-            self.executeCommand(title=f"Start download region PBF file from url: {AppConstant.REGION_PBF_FILE_URL}",
-                                command=f"curl -L -o {AppConstant.REGION_PBF_FILE_ABSOLUTE_PATH} {AppConstant.REGION_PBF_FILE_URL}")
+            self.executeCommand(title=f"Start download region PBF file from url: {self.REGION_PBF_FILE_ABSOLUTE_PATH}",
+                                command=f"curl -L -o {self.REGION_PBF_FILE_ABSOLUTE_PATH} {self.REGION_PBF_FILE_ABSOLUTE_PATH}")
 
-            self.executeCommand(title=f"Start download admins PBF file from url: {AppConstant.ADMINS_PBF_FILE_URL}",
-                                command=f"curl -L -o {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH} {AppConstant.ADMINS_PBF_FILE_URL}")
+            self.executeCommand(title=f"Start download admins PBF file from url: {self.ADMINS_PBF_FILE_ABSOLUTE_PATH}",
+                                command=f"curl -L -o {self.ADMINS_PBF_FILE_ABSOLUTE_PATH} {self.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
 
-            if os.path.exists(f"{AppConstant.TILES_DIR}"):
-                self.executeCommand(title=f"Remove old tiles data from dir: {AppConstant.TILES_DIR}",
-                                    command=f"rm -r {AppConstant.TILES_DIR}/*")
+            if os.path.exists(f"{self.TILES_DIR}"):
+                self.executeCommand(title=f"Remove old tiles data from dir: {self.TILES_DIR}",
+                                    command=f"rm -r {self.TILES_DIR}/*")
             else:
-                self.executeCommand(title=f"Create new tiles dir: {AppConstant.TILES_DIR}",
-                                    command=f"mkdir  {AppConstant.TILES_DIR}")
+                self.executeCommand(title=f"Create new tiles dir: {self.TILES_DIR}",
+                                    command=f"mkdir  {self.TILES_DIR}")
 
-            self.executeCommand(title=f"Build admins in: {AppConstant.TILES_DIR}",
-                                command=f"valhalla_build_admins --config {AppConstant.CONFIG_FILE} {AppConstant.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
+            self.executeCommand(title=f"Build admins in: {self.TILES_DIR}",
+                                command=f"valhalla_build_admins --config {self.CONFIG_FILE} {self.ADMINS_PBF_FILE_ABSOLUTE_PATH}")
 
-            self.executeCommand(title=f"Build timezones in: {AppConstant.TILES_DIR}",
-                                command=f"valhalla_build_timezones > {AppConstant.TILES_DIR}/timezones.sqlite")
+            self.executeCommand(title=f"Build timezones in: {self.TILES_DIR}",
+                                command=f"valhalla_build_timezones > {self.TILES_DIR}/timezones.sqlite")
 
-            self.executeCommand(title=f"Build tiles in: {AppConstant.TILES_DIR}",
-                                command=f"valhalla_build_tiles -c {AppConstant.CONFIG_FILE} {AppConstant.REGION_PBF_FILE_ABSOLUTE_PATH}")
+            self.executeCommand(title=f"Build tiles in: {self.TILES_DIR}",
+                                command=f"valhalla_build_tiles -c {self.CONFIG_FILE} {self.REGION_PBF_FILE_ABSOLUTE_PATH}")
 
-            self.executeCommand(title=f"Build tiles tar file in: {AppConstant.TILES_DIR}",
-                                command=f"find {AppConstant.TILES_DIR} | sort -n | tar -cf '{AppConstant.TEMP_TILES_TAR_FILE}' --no-recursion -T -")
+            self.executeCommand(title=f"Build tiles tar file in: {self.TILES_DIR}",
+                                command=f"find {self.TILES_DIR} | sort -n | tar -cf '{self.TEMP_TILES_TAR_FILE}' --no-recursion -T -")
 
-            sizeInBytes = os.path.getsize(f"{AppConstant.TEMP_TILES_TAR_FILE}")
+            sizeInBytes = os.path.getsize(f"{self.TEMP_TILES_TAR_FILE}")
             if sizeInBytes == 0:
                 self.fileUtil.writeLog("Build tiles tar file failed")
                 return
@@ -83,16 +91,16 @@ class Run:
                 for valhallaPid in valhallaPidArr:
                     self.killProcessByStr(valhallaPid, "valhalla")
 
-            if os.path.exists(f"{AppConstant.TILES_TAR_FILE}"):
-                self.executeCommand(title=f"Remove old tiles tar {AppConstant.TILES_TAR_FILE}",
-                                    command=f"rm {AppConstant.TILES_TAR_FILE}")
+            if os.path.exists(f"{self.TILES_TAR_FILE}"):
+                self.executeCommand(title=f"Remove old tiles tar {self.TILES_TAR_FILE}",
+                                    command=f"rm {self.TILES_TAR_FILE}")
 
 
             self.executeCommand(title="Rename temp tiles tar",
-                                    command=f"mv {AppConstant.TEMP_TILES_TAR_FILE} {AppConstant.TILES_TAR_FILE}")
+                                    command=f"mv {self.TEMP_TILES_TAR_FILE} {self.TILES_TAR_FILE}")
 
             self.executeCommand(title=f"Start Valhalla Server",
-                                    command=f"valhalla_service {AppConstant.CONFIG_FILE} {AppConstant.VALHALLA_THREADS}")
+                                    command=f"valhalla_service {self.CONFIG_FILE} {AppConstant.VALHALLA_THREADS}")
         except Exception as error:
             self.fileUtil.writeLog(f"App Exception: {error}")
 
