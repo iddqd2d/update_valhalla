@@ -26,7 +26,7 @@ class FileUtil:
             im.write('\n')
 
     def writeLog(self, data, consoleLogNeed=True):
-        with open(AppConstant.LOG_FILE_PATH, 'a') as file:
+        with open("update.log", 'a') as file:
             dtString = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             file.write(f"{dtString} - {data}\n")
             if consoleLogNeed: print(f"{dtString} - {data}")
