@@ -1,3 +1,4 @@
+import re
 import time
 import subprocess
 import os
@@ -8,27 +9,44 @@ from util.FileUtil import FileUtil
 
 class Run:
 
+    ERROR_KEYWORDS = [r"runtime_error", r"Aborted", r"command not found"]
+    ERROR_REGEX = re.compile("|".join(ERROR_KEYWORDS), re.IGNORECASE)
+
     def __init__(self):
         self.fileUtil = FileUtil.instance()
 
         if not AppConstant.VALHALLA_DIR:
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            self.VALHALLA_DIR = os.path.abspath(os.path.expanduser(base_dir))
-            os.makedirs(self.VALHALLA_DIR, exist_ok=True)
+            AppConstant.VALHALLA_DIR = os.path.abspath(os.path.expanduser(base_dir))
+            os.makedirs(AppConstant.VALHALLA_DIR, exist_ok=True)
 
-        self.TILES_DIR = os.path.join(self.VALHALLA_DIR, "valhalla_tiles")
-        self.TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "valhalla_tiles.tar")
-        self.TEMP_TILES_TAR_FILE = os.path.join(self.VALHALLA_DIR, "temp_valhalla_tiles.tar")
-        self.CONFIG_FILE = os.path.join(self.VALHALLA_DIR, "valhalla.json")
-        self.REGION_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "tiles.pbf")
-        self.ADMINS_PBF_FILE_ABSOLUTE_PATH = os.path.join(self.VALHALLA_DIR, "admins.pbf")
+        self.TILES_DIR = os.path.join(AppConstant.VALHALLA_DIR, "valhalla_tiles")
+        self.TILES_TAR_FILE = os.path.join(AppConstant.VALHALLA_DIR, "valhalla_tiles.tar")
+        self.TEMP_TILES_TAR_FILE = os.path.join(AppConstant.VALHALLA_DIR, "temp_valhalla_tiles.tar")
+        self.CONFIG_FILE = os.path.join(AppConstant.VALHALLA_DIR, "valhalla.json")
+        self.REGION_PBF_FILE_ABSOLUTE_PATH = os.path.join(AppConstant.VALHALLA_DIR, "tiles.pbf")
+        self.ADMINS_PBF_FILE_ABSOLUTE_PATH = os.path.join(AppConstant.VALHALLA_DIR, "admins.pbf")
 
-    def executeCommand(self, title, command):
+    def scanAndRaise(self, title: str, output: str):
+        if not output:
+            return
+        m = self.ERROR_REGEX.search(output)
+        if m:
+            start = max(0, m.start() - 80)
+            end = min(len(output), m.end() + 80)
+            ctx = output[start:end]
+            self.fileUtil.writeLog(f"[error-scan] context: {ctx}")
+            raise RuntimeError(f"'{title}' failed due to error keywords in output")
+
+
+    def executeCommand(self, title, command, stopOnKeywords: bool = True):
         self.fileUtil.writeLog(f"Title: {title}")
         self.fileUtil.writeLog(f"Command: {command}")
         output = subprocess.getoutput(command)
         self.fileUtil.writeLog("Output: " + (output if output else "Done!"))
-
+        if stopOnKeywords:
+            self.scanAndRaise(title, output)
+        return output
 
     def killProcessByStr(self, pid, containsStr):
         if containsStr not in subprocess.getoutput(f"ps -p {pid} -o args="):
